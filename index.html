@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ParamCheck — Static SQL Injection Auditor</title>
+<meta name="description" content="Paste source code and audit it for SQL-injection-prone patterns. Entirely client-side — no network requests, no live targets.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400;1,8..60,500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="top">
+  <div class="wrap">
+    <div class="brand">PARAMCHECK<span class="dot">.</span><span class="tag">static analysis</span></div>
+    <div class="navlinks">
+      <a href="#console">Run a scan</a>
+      <a href="#steps">How it works</a>
+      <a href="#coverage">Coverage</a>
+      <a href="#why">Scope</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Finding 00 — Scope</p>
+    <h1>Find the SQL injection before your database does.</h1>
+    <p class="hero-sub">ParamCheck reads source code — not live sites — and flags the lines where a query is being <strong>built</strong> instead of <strong>parameterized</strong>: string interpolation, concatenation, and format calls carrying a SQL keyword. Every scan runs in your browser. Nothing here ever sends a request.</p>
+    <div class="hero-meta">
+      <span>Python · JavaScript · PHP · Java · C#</span>
+      <span>Zero network calls</span>
+      <span>No backend, no data stored</span>
+    </div>
+  </div>
+</header>
+
+<section class="console" id="console">
+  <div class="wrap">
+    <div class="console-frame">
+      <div class="console-head">
+        <span class="label">Live audit console</span>
+        <div class="chips">
+          <button class="chip" data-ex="python">Load Python example</button>
+          <button class="chip" data-ex="js">Load JS example</button>
+          <button class="chip" data-ex="php">Load PHP example</button>
+        </div>
+      </div>
+      <div class="console-body">
+        <div class="pane">
+          <p class="pane-title">Source</p>
+          <textarea id="codeInput" spellcheck="false"></textarea>
+          <div class="run-row">
+            <button class="primary" id="runBtn">Run scan</button>
+            <button class="ghost file-btn">Upload file
+              <input type="file" id="fileInput" accept=".py,.js,.ts,.php,.java,.cs,.txt">
+            </button>
+            <button class="ghost" id="clearBtn">Clear</button>
+          </div>
+        </div>
+        <div class="pane">
+          <p class="pane-title">Findings ledger</p>
+          <div class="summary-row" id="summaryRow"></div>
+          <div id="findings"><p class="empty-state">Run a scan to see results here.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="steps" id="steps">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>How the audit works</h2>
+      <p>Three passes, all local to your browser tab.</p>
+    </div>
+    <div class="steps-grid">
+      <div class="step">
+        <p class="num mono">01</p>
+        <h3>Paste or upload</h3>
+        <p>Drop in a file or paste a snippet. Nothing leaves your machine — there's no upload endpoint, no server side to this at all.</p>
+      </div>
+      <div class="step">
+        <p class="num mono">02</p>
+        <h3>Pattern audit</h3>
+        <p>Each line is checked against known query-building idioms — f-strings, template literals, concatenation, <code>.format()</code> — and cross-checked against nearby parameterization markers to cut false positives.</p>
+      </div>
+      <div class="step">
+        <p class="num mono">03</p>
+        <h3>Remediation</h3>
+        <p>Every finding ships with the parameterized rewrite for that language, so the fix is a copy-paste away, not a research project.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="coverage" id="coverage">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Detection coverage</h2>
+      <p>The same failure mode, five syntaxes. ParamCheck recognizes all of them.</p>
+    </div>
+
+    <div class="cov-item">
+      <div class="cov-head"><b>Python</b> — f-string / format interpolation</div>
+      <div class="cov-body">
+        <div class="cov-col bad"><span class="cov-tag">Vulnerable</span><pre>cursor.execute(f"SELECT * FROM users WHERE id = {user_id}")</pre></div>
+        <div class="cov-col good"><span class="cov-tag">Fixed</span><pre>cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))</pre></div>
+      </div>
+    </div>
+
+    <div class="cov-item">
+      <div class="cov-head"><b>JavaScript / Node</b> — template literal interpolation</div>
+      <div class="cov-body">
+        <div class="cov-col bad"><span class="cov-tag">Vulnerable</span><pre>db.query(`SELECT * FROM users WHERE id = ${userId}`)</pre></div>
+        <div class="cov-col good"><span class="cov-tag">Fixed</span><pre>db.query("SELECT * FROM users WHERE id = $1", [userId])</pre></div>
+      </div>
+    </div>
+
+    <div class="cov-item">
+      <div class="cov-head"><b>PHP</b> — superglobal concatenation</div>
+      <div class="cov-body">
+        <div class="cov-col bad"><span class="cov-tag">Vulnerable</span><pre>$sql = "SELECT * FROM users WHERE id = " . $_GET['id'];</pre></div>
+        <div class="cov-col good"><span class="cov-tag">Fixed</span><pre>$stmt = $pdo->prepare("SELECT * FROM users WHERE id = :id");
+$stmt->execute(["id" => $id]);</pre></div>
+      </div>
+    </div>
+
+    <div class="cov-item">
+      <div class="cov-head"><b>Java</b> — Statement concatenation</div>
+      <div class="cov-body">
+        <div class="cov-col bad"><span class="cov-tag">Vulnerable</span><pre>stmt.executeQuery("SELECT * FROM users WHERE id = " + userId);</pre></div>
+        <div class="cov-col good"><span class="cov-tag">Fixed</span><pre>PreparedStatement ps = conn.prepareStatement("SELECT * FROM users WHERE id = ?");
+ps.setInt(1, userId);</pre></div>
+      </div>
+    </div>
+
+    <div class="cov-item">
+      <div class="cov-head"><b>C#</b> — SqlCommand concatenation</div>
+      <div class="cov-body">
+        <div class="cov-col bad"><span class="cov-tag">Vulnerable</span><pre>cmd.CommandText = "SELECT * FROM users WHERE id = " + userId;</pre></div>
+        <div class="cov-col good"><span class="cov-tag">Fixed</span><pre>cmd.CommandText = "SELECT * FROM users WHERE id = @id";
+cmd.Parameters.AddWithValue("@id", userId);</pre></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="why" id="why">
+  <div class="wrap">
+    <div class="why-grid">
+      <div>
+        <div class="section-head">
+          <h2>Why this stays static</h2>
+          <p>Scope is a design decision here, not a disclaimer.</p>
+        </div>
+        <ul class="why-list">
+          <li><b>No network calls, ever.</b> ParamCheck never opens a socket. The entire audit runs in JavaScript in your tab.</li>
+          <li><b>No target to authorize.</b> There's nothing to point at a URL, so there's no question of scope or permission to sort out first.</li>
+          <li><b>Safe against any codebase.</b> Paste code from a repo you don't control, a tutorial, or a take-home — the tool only ever reads text.</li>
+        </ul>
+      </div>
+      <div class="caveat">
+        <b>Known limitation</b>
+        Detection is line-level pattern matching across a few common query-building idioms — not full AST or taint analysis. It won't trace a query string built across many lines or reconstructed through several functions, and it can miss unconventional patterns or flag safe-looking code that isn't. Treat findings as a fast first pass to guide manual review, not a verdict.
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="badges">
+      <span class="badge">Client-side only</span>
+      <span class="badge">No backend</span>
+      <span class="badge">Regex heuristics</span>
+      <span class="badge">Zero dependencies</span>
+    </div>
+    <div class="credit">ParamCheck — a static-analysis portfolio project. © 2026.</div>
+  </div>
+</footer>
+
+<script src="js/scanner.js"></script>
+
+</body>
+</html>
