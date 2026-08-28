@@ -2,7 +2,7 @@
 
 A static SQL-injection auditor that runs entirely in the browser. Paste or upload source code and it flags the lines where a query is **built** (string interpolation, concatenation, `.format()`) instead of **parameterized** — across Python, JavaScript/Node, PHP, Java, and C#.
 
-**[Live demo →](#deploying)** (deploy in under a minute, see below)
+**[Live demo →](#deploying)** https://paramcheck.netlify.app
 
 ![ParamCheck desktop screenshot](screenshots/desktop.png)
 
