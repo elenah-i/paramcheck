@@ -51,14 +51,6 @@ python3 -m http.server 8000
 
 Opening `index.html` directly (`file://`) also works, with one caveat: some browsers block cross-origin font requests over `file://`, so the page falls back to system fonts until it's served over `http(s)`.
 
-## Deploying
-
-Since there's no backend, any static host works. A few options:
-
-- **GitHub Pages** — push this folder to a repo, enable Pages on the `main` branch, done.
-- **Netlify Drop** — drag the folder onto [app.netlify.com/drop](https://app.netlify.com/drop) for an instant URL.
-- **Google Cloud Storage + Cloud CDN** — upload the folder to a public GCS bucket configured for static website hosting, front it with Cloud CDN/Load Balancer for a custom domain.
-- **AWS S3 + CloudFront** — same pattern: S3 static website hosting behind a CloudFront distribution.
 
 ## Tech stack
 
